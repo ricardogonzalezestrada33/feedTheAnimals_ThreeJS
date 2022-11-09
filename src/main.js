@@ -2,6 +2,7 @@ import * as THREE from "../threejs/build/three.module.js";
 
 let elThreejs = document.getElementById("threejs");
 let camera,scene,renderer;
+let axesHelper;
 
 init();
 
@@ -17,8 +18,12 @@ function init() {
 		0.1,
 		1000
 	);
-  camera.position.z = 5;
-  camera.position.y = 1;
+	camera.position.z = -10;
+	// camera.position.z = 0;
+	camera.position.y = 20;
+  
+	// rotate camera to see the scene from the top
+	camera.rotation.x = -Math.PI / 2;
 
 
   // render
@@ -28,10 +33,16 @@ function init() {
 	renderer.shadowMap.enabled = true;
 	renderer.outputEncoding = THREE.sRGBEncoding;
 
+
+	axesHelper = new THREE.AxesHelper( 100 );
+	scene.add( axesHelper );
+
 	elThreejs.appendChild(renderer.domElement);
 
-  addBox();
-  animate()
+	addBox();
+	addPlane();
+
+	animate();
 }
 
 function animate(){
@@ -40,8 +51,18 @@ function animate(){
 }
 
 function addBox(){
-  let geometry = new THREE.BoxGeometry(1,1,1);
-  let material = new THREE.MeshBasicMaterial({color: 'pink'});
-  let cube = new THREE.Mesh(geometry, material);
-  scene.add(cube);
+	let geometry = new THREE.BoxGeometry(1,1,1);
+	let material = new THREE.MeshBasicMaterial({color: 'pink'});
+	let cube = new THREE.Mesh(geometry, material);
+	// cube.position.set(0, 0, 0); default
+	scene.add(cube);
 }
+
+
+function addPlane(){
+	let geometry =  new THREE.BoxGeometry(50, 0, 50);
+	let material = new THREE.MeshBasicMaterial({color: 'gray'});
+	let plane = new THREE.Mesh(geometry, material);
+	plane.position.set(0, 0, -10);
+	scene.add(plane);
+  }
