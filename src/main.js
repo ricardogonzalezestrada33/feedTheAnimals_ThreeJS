@@ -126,5 +126,9 @@ async function addProjectile(){
 function updateProjectiles(){
 	projectileMeshes.forEach((projectile, index) => {
 		projectile.position.z -= 0.5;
+		if(projectile.position.z < -20){
+			scene.remove(projectile);
+			projectileMeshes.splice(index, 1);
+		  }
 	});
 }
