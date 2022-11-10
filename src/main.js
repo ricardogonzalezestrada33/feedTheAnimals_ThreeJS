@@ -87,7 +87,7 @@ function addKeysListener(){
 
 function movePlayer(){
 	// left letter A
-	if(keyboard[65]) cube.position.x -= 0.25;
+	if(keyboard[65] && cube.position.x > -20) cube.position.x -= 0.25;
 	// right letter D
-	if(keyboard[68]) cube.position.x += 0.25;
+	if(keyboard[68] && cube.position.x < 20) cube.position.x += 0.25;
   }
