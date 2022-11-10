@@ -3,7 +3,8 @@ import * as THREE from "../threejs/build/three.module.js";
 let elThreejs = document.getElementById("threejs");
 let camera,scene,renderer;
 let axesHelper;
-
+let keyboard = {};
+let cube;
 init();
 
 function init() {
@@ -42,10 +43,15 @@ function init() {
 	addBox();
 	addPlane();
 
+	addKeysListener();
+
 	animate();
 }
 
 function animate(){
+
+	movePlayer();
+
 	renderer.render(scene, camera);
 	requestAnimationFrame(animate);
 }
@@ -53,7 +59,7 @@ function animate(){
 function addBox(){
 	let geometry = new THREE.BoxGeometry(1,1,1);
 	let material = new THREE.MeshBasicMaterial({color: 'pink'});
-	let cube = new THREE.Mesh(geometry, material);
+	cube = new THREE.Mesh(geometry, material);
 	// cube.position.set(0, 0, 0); default
 	scene.add(cube);
 }
@@ -65,4 +71,23 @@ function addPlane(){
 	let plane = new THREE.Mesh(geometry, material);
 	plane.position.set(0, 0, -10);
 	scene.add(plane);
+  }
+
+
+function addKeysListener(){
+	window.addEventListener('keydown', function(event){
+	  keyboard[event.keyCode] = true;
+	} , false);
+	window.addEventListener('keyup', function(event){
+	  keyboard[event.keyCode] = false;
+	} , false);
+}
+
+
+
+function movePlayer(){
+	// left letter A
+	if(keyboard[65]) cube.position.x -= 0.25;
+	// right letter D
+	if(keyboard[68]) cube.position.x += 0.25;
   }
