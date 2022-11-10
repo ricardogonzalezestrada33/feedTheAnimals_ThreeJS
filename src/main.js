@@ -1,4 +1,5 @@
 import * as THREE from "../threejs/build/three.module.js";
+import { GLTFLoader } from '../threejs/examples/jsm/loaders/GLTFLoader.js';
 
 let elThreejs = document.getElementById("threejs");
 let camera,scene,renderer;
@@ -15,7 +16,7 @@ let animalMesh;
 
 init();
 
-function init() {
+async function init() {
 
   // Scene
 	scene = new THREE.Scene();
@@ -34,6 +35,10 @@ function init() {
 	// rotate camera to see the scene from the top
 	camera.rotation.x = -Math.PI / 2;
 
+	const ambient = new THREE.HemisphereLight(0xffffbb, 0x080820);
+	ambient.position.set(0, 5, 0);
+	scene.add(ambient);
+  
 
   // render
 	renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -48,14 +53,18 @@ function init() {
 
 	elThreejs.appendChild(renderer.domElement);
 
-	addBox();
+	await loadAnimal();
+
+	addPlayer();
 	addPlane();
 	addProjectile();
 
-	spawnAnimals();
 
 	addKeysListener();
 	animate();
+
+	spawnAnimals();
+
 }
 
 function animate(){
@@ -83,18 +92,19 @@ function animate(){
 	requestAnimationFrame(animate);
 }
 
-function addBox(){
-	let geometry = new THREE.BoxGeometry(1,1,1);
-	let material = new THREE.MeshBasicMaterial({color: 'pink'});
-	playerMesh = new THREE.Mesh(geometry, material);
-	// playerMesh.position.set(0, 0, 0); default
+async function addPlayer(){
+	const gltfLoader = new GLTFLoader().setPath( 'src/assets/' );
+	const playerGLTF = await gltfLoader.loadAsync( 'player.glb' );
+	playerMesh = playerGLTF.scene.children[0];
+	// playerMesh.position.set(0, 0, 0); // default
 	scene.add(playerMesh);
 }
 
 
 function addPlane(){
+	const texture = new THREE.TextureLoader().load( "src/assets/Texture_Grass.png" );
 	let geometry =  new THREE.BoxGeometry(50, 0, 50);
-	let material = new THREE.MeshBasicMaterial({color: 'gray'});
+	let material = new THREE.MeshBasicMaterial({map: texture});
 	let plane = new THREE.Mesh(geometry, material);
 	plane.position.set(0, 0, -10);
 	scene.add(plane);
@@ -137,14 +147,12 @@ function movePlayer(){
   }
 
 
-
 async function addProjectile(){
-	let geometry = new THREE.BoxGeometry(1,1,1);
-	let material = new THREE.MeshBasicMaterial({color: 'green'});
-	projectileMesh = new THREE.Mesh(geometry, material);
+	const gltfLoader = new GLTFLoader().setPath( 'src/assets/' );
+	const projectileGLTF = await gltfLoader.loadAsync( 'pizza.glb' );
+	projectileMesh = projectileGLTF.scene;
+	projectileMesh.scale.set(2, 2, 2);
 }
-
-
 
 function updateProjectiles(){
 	projectileMeshes.forEach((projectile, index) => {
@@ -156,21 +164,21 @@ function updateProjectiles(){
 	});
 }
 
+async function loadAnimal(){
+	const gltfLoader = new GLTFLoader().setPath('src/assets/');
+	const animalGLTF = await gltfLoader.loadAsync( 'moose.glb' );
+	animalMesh = animalGLTF.scene;
 
-function addAnimal(posX = 0){
+}
 
-	let geometry = new THREE.BoxGeometry(1,1,1);
-	let material = new THREE.MeshBasicMaterial({color: 'yellow'});
-	animalMesh = new THREE.Mesh(geometry, material);
 
-	//set position
+function addAnimal(posX){
 	animalMesh.position.x = posX;
 	animalMesh.position.y = 0;
 	animalMesh.position.z = -20;
-  
 	animalMeshes.push(animalMesh);
 	scene.add(animalMesh);
-  }
+}
 
 function spawnAnimals(){
 	// random number between -20 and 20
@@ -181,7 +189,7 @@ function spawnAnimals(){
 		addAnimal(randomX);
 	}, 2000);
   }
-
+  
 function updateAnimals(){
 	animalMeshes.forEach((animal, index) => {
 		animal.position.z += 0.15;
@@ -189,7 +197,6 @@ function updateAnimals(){
 		  scene.remove(animal);
 		  animalMeshes.splice(index, 1);
 		}
-	  });
-
+	});
 }
   
