@@ -64,6 +64,21 @@ function animate(){
 	updateProjectiles();
 	updateAnimals();
 
+	// collision detection between projectileMeshes and animalMeshes
+	animalMeshes.forEach((animal, indexa) => {
+		projectileMeshes.forEach((projectile, indexb) => {
+			if( animal.position.x >= projectile.position.x - 1 &&
+				animal.position.x <= projectile.position.x + 1 &&
+				animal.position.z >= projectile.position.z - 1 &&
+				animal.position.z <= projectile.position.z + 1){
+					scene.remove(animal);
+					animalMeshes.splice(indexa, 1);
+					scene.remove(projectile);
+					projectileMeshes.splice(indexb, 1);
+			}
+		});
+	});
+
 	renderer.render(scene, camera);
 	requestAnimationFrame(animate);
 }
