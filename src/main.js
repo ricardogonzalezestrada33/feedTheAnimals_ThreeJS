@@ -3,10 +3,16 @@ import * as THREE from "../threejs/build/three.module.js";
 let elThreejs = document.getElementById("threejs");
 let camera,scene,renderer;
 let axesHelper;
+
 let keyboard = {};
 let playerMesh;
+
 let projectileMeshes = [];
 let projectileMesh;
+
+let animalMeshes = [];
+let animalMesh;
+
 init();
 
 function init() {
@@ -46,8 +52,9 @@ function init() {
 	addPlane();
 	addProjectile();
 
-	addKeysListener();
+	spawnAnimals();
 
+	addKeysListener();
 	animate();
 }
 
@@ -55,6 +62,7 @@ function animate(){
 
 	movePlayer();
 	updateProjectiles();
+	updateAnimals();
 
 	renderer.render(scene, camera);
 	requestAnimationFrame(animate);
@@ -132,3 +140,41 @@ function updateProjectiles(){
 		  }
 	});
 }
+
+
+function addAnimal(posX = 0){
+
+	let geometry = new THREE.BoxGeometry(1,1,1);
+	let material = new THREE.MeshBasicMaterial({color: 'yellow'});
+	animalMesh = new THREE.Mesh(geometry, material);
+
+	//set position
+	animalMesh.position.x = posX;
+	animalMesh.position.y = 0;
+	animalMesh.position.z = -20;
+  
+	animalMeshes.push(animalMesh);
+	scene.add(animalMesh);
+  }
+
+function spawnAnimals(){
+	// random number between -20 and 20
+	let randomX = Math.floor(Math.random() * 20) - 10;
+	addAnimal(randomX);
+	setInterval(() => {
+		randomX = Math.floor(Math.random() * 20) - 10;
+		addAnimal(randomX);
+	}, 2000);
+  }
+
+function updateAnimals(){
+	animalMeshes.forEach((animal, index) => {
+		animal.position.z += 0.15;
+		if(animal.position.z > 0){
+		  scene.remove(animal);
+		  animalMeshes.splice(index, 1);
+		}
+	  });
+
+}
+  
