@@ -4,7 +4,9 @@ let elThreejs = document.getElementById("threejs");
 let camera,scene,renderer;
 let axesHelper;
 let keyboard = {};
-let cube;
+let playerMesh;
+let projectileMeshes = [];
+let projectileMesh;
 init();
 
 function init() {
@@ -42,6 +44,7 @@ function init() {
 
 	addBox();
 	addPlane();
+	addProjectile();
 
 	addKeysListener();
 
@@ -51,6 +54,7 @@ function init() {
 function animate(){
 
 	movePlayer();
+	updateProjectiles();
 
 	renderer.render(scene, camera);
 	requestAnimationFrame(animate);
@@ -59,9 +63,9 @@ function animate(){
 function addBox(){
 	let geometry = new THREE.BoxGeometry(1,1,1);
 	let material = new THREE.MeshBasicMaterial({color: 'pink'});
-	cube = new THREE.Mesh(geometry, material);
-	// cube.position.set(0, 0, 0); default
-	scene.add(cube);
+	playerMesh = new THREE.Mesh(geometry, material);
+	// playerMesh.position.set(0, 0, 0); default
+	scene.add(playerMesh);
 }
 
 
@@ -81,13 +85,46 @@ function addKeysListener(){
 	window.addEventListener('keyup', function(event){
 	  keyboard[event.keyCode] = false;
 	} , false);
+
+	window.addEventListener("keyup", (event) => {
+		// boiler plate code to prevent side effects
+		if (event.isComposing || event.keyCode === 229) {
+		  return;
+		}
+	
+		// space bar 
+		if (event.keyCode == 32) {
+		  let projectileMeshClone = projectileMesh.clone();
+		  projectileMeshClone.position.x = playerMesh.position.x;
+		  projectileMeshClone.position.y = playerMesh.position.y;
+		  projectileMeshClone.position.z = playerMesh.position.z;
+		  scene.add(projectileMeshClone);
+		  projectileMeshes.push(projectileMeshClone);
+		}
+	  });
 }
 
 
 
 function movePlayer(){
 	// left letter A
-	if(keyboard[65] && cube.position.x > -20) cube.position.x -= 0.25;
+	if(keyboard[65] && playerMesh.position.x > -20) playerMesh.position.x -= 0.25;
 	// right letter D
-	if(keyboard[68] && cube.position.x < 20) cube.position.x += 0.25;
+	if(keyboard[68] && playerMesh.position.x < 20) playerMesh.position.x += 0.25;
   }
+
+
+
+async function addProjectile(){
+	let geometry = new THREE.BoxGeometry(1,1,1);
+	let material = new THREE.MeshBasicMaterial({color: 'green'});
+	projectileMesh = new THREE.Mesh(geometry, material);
+}
+
+
+
+function updateProjectiles(){
+	projectileMeshes.forEach((projectile, index) => {
+		projectile.position.z -= 0.5;
+	});
+}
