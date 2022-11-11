@@ -1,5 +1,6 @@
 import * as THREE from "../threejs/build/three.module.js";
 import { GLTFLoader } from '../threejs/examples/jsm/loaders/GLTFLoader.js';
+import * as SkeletonUtils from '../threejs/examples/jsm/utils/SkeletonUtils.js';
 
 let elThreejs = document.getElementById("threejs");
 let camera,scene,renderer;
@@ -14,6 +15,9 @@ let projectileMesh;
 let animalMeshes = [];
 let animalMesh;
 
+let animalGLTF;
+let mixers = [];
+let clock;
 init();
 
 async function init() {
@@ -39,6 +43,7 @@ async function init() {
 	ambient.position.set(0, 5, 0);
 	scene.add(ambient);
   
+	clock = new THREE.Clock();
 
   // render
 	renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -48,8 +53,8 @@ async function init() {
 	renderer.outputEncoding = THREE.sRGBEncoding;
 
 
-	axesHelper = new THREE.AxesHelper( 100 );
-	scene.add( axesHelper );
+	// axesHelper = new THREE.AxesHelper( 100 );
+	// scene.add( axesHelper );
 
 	elThreejs.appendChild(renderer.domElement);
 
@@ -73,23 +78,15 @@ function animate(){
 	updateProjectiles();
 	updateAnimals();
 
+
 	// collision detection between projectileMeshes and animalMeshes
-	animalMeshes.forEach((animal, indexa) => {
-		projectileMeshes.forEach((projectile, indexb) => {
-			if( animal.position.x >= projectile.position.x - 1 &&
-				animal.position.x <= projectile.position.x + 1 &&
-				animal.position.z >= projectile.position.z - 1 &&
-				animal.position.z <= projectile.position.z + 1){
-					scene.remove(animal);
-					animalMeshes.splice(indexa, 1);
-					scene.remove(projectile);
-					projectileMeshes.splice(indexb, 1);
-			}
-		});
-	});
+	checkCollisions();
 
 	renderer.render(scene, camera);
 	requestAnimationFrame(animate);
+
+	const dt = clock.getDelta();
+	for ( const mixer of mixers ) mixer.update( dt );
 }
 
 async function addPlayer(){
@@ -141,10 +138,10 @@ function addKeysListener(){
 
 function movePlayer(){
 	// left letter A
-	if(keyboard[65] && playerMesh.position.x > -20) playerMesh.position.x -= 0.25;
+	if(keyboard[65] && playerMesh.position.x > -15) playerMesh.position.x -= 0.25;
 	// right letter D
-	if(keyboard[68] && playerMesh.position.x < 20) playerMesh.position.x += 0.25;
-  }
+	if(keyboard[68] && playerMesh.position.x < 15) playerMesh.position.x += 0.25;
+}
 
 
 async function addProjectile(){
@@ -166,18 +163,29 @@ function updateProjectiles(){
 
 async function loadAnimal(){
 	const gltfLoader = new GLTFLoader().setPath('src/assets/');
-	const animalGLTF = await gltfLoader.loadAsync( 'moose.glb' );
-	animalMesh = animalGLTF.scene;
-
+	animalGLTF = await gltfLoader.loadAsync( 'moose.glb' );
 }
 
 
 function addAnimal(posX){
-	animalMesh.position.x = posX;
-	animalMesh.position.y = 0;
-	animalMesh.position.z = -20;
-	animalMeshes.push(animalMesh);
-	scene.add(animalMesh);
+	let model1 = SkeletonUtils.clone(animalGLTF.scene);
+
+	let animations = {};
+	animalGLTF.animations.forEach( animation => {
+	  animations[animation.name] = animation;
+	});
+
+	let actualAnimation = "MooseAnimation";
+	const mixer1 = new THREE.AnimationMixer(model1);
+	mixer1.clipAction(animations[actualAnimation]).play();
+  
+	model1.position.x = posX;
+	model1.position.y = 0;
+	model1.position.z = -30;
+
+	animalMeshes.push(model1);
+	scene.add(model1);
+	mixers.push(mixer1);
 }
 
 function spawnAnimals(){
@@ -200,3 +208,18 @@ function updateAnimals(){
 	});
 }
   
+function checkCollisions(){
+	animalMeshes.forEach((animal, indexa) => {
+		projectileMeshes.forEach((projectile, indexb) => {
+			if( animal.position.x >= projectile.position.x - 1 &&
+				animal.position.x <= projectile.position.x + 1 &&
+				animal.position.z >= projectile.position.z - 1 &&
+				animal.position.z <= projectile.position.z + 1){
+					scene.remove(animal);
+					animalMeshes.splice(indexa, 1);
+					scene.remove(projectile);
+					projectileMeshes.splice(indexb, 1);
+			}
+		});
+	});
+}
